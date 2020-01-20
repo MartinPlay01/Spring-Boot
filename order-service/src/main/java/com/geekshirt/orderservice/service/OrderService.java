@@ -1,21 +1,44 @@
 package com.geekshirt.orderservice.service;
 
 
+import com.geekshirt.orderservice.client.CustomerServiceClient;
+import com.geekshirt.orderservice.dto.AccountDto;
 import com.geekshirt.orderservice.dto.OrderRequest;
 import com.geekshirt.orderservice.entities.Order;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Service
 public class OrderService {
 
-    public Order createOrder(OrderRequest OrderRequest){
+    @Autowired
+    private CustomerServiceClient customerClient;
+
+    public Order createOrder(OrderRequest orderRequest){
+
+
+        AccountDto account = customerClient.findAccountById(orderRequest.getAccountId());
+
+        AccountDto dummyAccount = customerClient.createDummyAcount();
+        //dummyAccount = customerClient.createAccount(dummyAccount);
+        dummyAccount = customerClient.createAccountBody(dummyAccount);
+
+        dummyAccount.getAddress().setZipCode("99999");
+        customerClient.updateAccount(dummyAccount);
+
+        AccountDto updateAccount = customerClient.findAccountById(orderRequest.getAccountId());
+        log.info(updateAccount.toString());
+
+        customerClient.deleteAccount(dummyAccount);
 
         Order response = new Order();
-        response.setAccountId("98792");
+        response.setAccountId(orderRequest.getAccountId());
         response.setOrderId("9999");
         response.setStatus("PENDING");
         response.setTotalAmount(100.00);
@@ -64,13 +87,5 @@ public class OrderService {
 
         return response;
     }
-
-
-
-
-
-
-
-
 
 }
