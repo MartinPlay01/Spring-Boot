@@ -5,6 +5,9 @@ import com.geekshirt.orderservice.client.CustomerServiceClient;
 import com.geekshirt.orderservice.dto.AccountDto;
 import com.geekshirt.orderservice.dto.OrderRequest;
 import com.geekshirt.orderservice.entities.Order;
+import com.geekshirt.orderservice.exceptions.AccountNotFoundException;
+import com.geekshirt.orderservice.util.ExceptionMessagesEnum;
+import com.geekshirt.orderservice.util.OrderValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,20 +25,12 @@ public class OrderService {
 
     public Order createOrder(OrderRequest orderRequest){
 
+        OrderValidator.validateOrder(orderRequest);
 
-        AccountDto account = customerClient.findAccountById(orderRequest.getAccountId());
+        AccountDto account = customerClient.findAccountById(orderRequest.getAccountId())
+                                        .orElseThrow(() -> new AccountNotFoundException(ExceptionMessagesEnum.ACCOUNT_NOT_FOUND.getValue()));
 
-        AccountDto dummyAccount = customerClient.createDummyAcount();
-        //dummyAccount = customerClient.createAccount(dummyAccount);
-        dummyAccount = customerClient.createAccountBody(dummyAccount);
 
-        dummyAccount.getAddress().setZipCode("99999");
-        customerClient.updateAccount(dummyAccount);
-
-        AccountDto updateAccount = customerClient.findAccountById(orderRequest.getAccountId());
-        log.info(updateAccount.toString());
-
-        customerClient.deleteAccount(dummyAccount);
 
         Order response = new Order();
         response.setAccountId(orderRequest.getAccountId());

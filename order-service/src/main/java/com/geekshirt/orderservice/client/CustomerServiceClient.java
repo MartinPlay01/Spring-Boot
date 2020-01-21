@@ -8,12 +8,16 @@ import com.geekshirt.orderservice.dto.CreditCardDto;
 import com.geekshirt.orderservice.dto.CustomerDto;
 import com.geekshirt.orderservice.util.AccountStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.graalvm.compiler.lir.amd64.AMD64BinaryConsumer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Optional;
 
 
 @Slf4j
@@ -33,11 +37,19 @@ public class CustomerServiceClient {
     }
 
 
-    public AccountDto findAccountById(String accountId){
+    public Optional<AccountDto> findAccountById(String accountId){
+
+        Optional<AccountDto> result = Optional.empty();
+        try{
+            result = Optional.ofNullable(restTemplate.getForObject(config.getCustomerServiceUrl() + "/{id}", AccountDto.class, accountId));
+        }
+        catch (HttpClientErrorException ex){
+            if(ex.getStatusCode() != HttpStatus.NOT_FOUND)
+                throw ex;
+        }
 
 
-        AccountDto account = restTemplate.getForObject(config.getCustomerServiceUrl() + "/{id}", AccountDto.class, accountId);
-        return account;
+        return result;
     }
 
 
